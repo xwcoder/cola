@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+    <div id="log"></div>
+    <script src="./kit.js"></script>
+
+<script>
+    kit.use( ['./lib/dom' ], function ( require ) {
+        var dom = require( './lib/dom' );
+        console.log( dom );
+        console.log( 'hello world' );
+    } );
+
+
+setTimeout( function () {
+        //TO BE COUNTINUE
+    kit.use( ['./lib/dom2' ], function ( require ) {
+        var dom = require( './lib/dom2' );
+        console.log( dom );
+        console.log( 'hello world2' );
+    } );
+}, 2e3 );
+</script>
+</body>
+</html>

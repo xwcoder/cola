@@ -1,0 +1,470 @@
+( function ( global, undefined ) {
+
+    'use strict';
+
+    var kit = {
+        version: '1.0.0'
+    };
+
+    var noop = function () {};
+
+    var extend = function ( o, c ) {
+
+        if ( c && typeof c == 'object' ) {
+            for ( var p in c ) {
+                o[ p ] = c[ p ];
+            }
+        }
+    };
+    
+    var isType = function ( type ) {
+        return function ( obj ) {
+            return {}.toString.call( obj ) == '[object ' + type + ']';
+        }
+    };
+
+    var isObject = isType( 'Object' );
+    var isFunction = isType( 'Function' );
+    var isArray = Array.isArray || isType( 'Array' );
+    var isString = isType( 'String' );
+
+    var emiter = {
+
+        events: {},
+
+        addEventListener: function ( type, handler, one ) {
+
+            if ( !type || !handler ) {
+                return;
+            }
+
+            this.events[ type ] = this.events[ type ] || [];
+            var handlers = this.events[ type ];
+
+            var handlerWrap, has;
+
+            for ( var index = handlers.length - 1; index >= 0; index-- ) {
+
+                handlerWrap = handlers[index];
+                if ( handlerWrap.h == handler ) {
+                    has = true;
+                    break;
+                }
+            }
+            
+            if ( !has ) {
+                handlers.push( { h: handler, one: one } );
+            }
+        },
+
+        removeEventListener: function ( type, handler ) {
+
+            if ( !type && !handler ) {
+                this.events = {};
+                return;
+            }
+
+            if ( !handler ) {
+                delete this.events[ type ];
+                return;
+            }
+
+            var handlers = this.events[ type ] || [];
+
+            var handlerWrap, index = 0;
+            
+            while ( index < handlers.length ) {
+
+                handlerWrap = handlers[index];
+
+                if ( handler === handlerWrap.h ) {
+                    handlers.splice( index, 1 );
+                } else {
+                    index++;
+                }
+            }
+        },
+
+        emit: function ( type, msg ) {
+
+            if ( !type ) {
+                return;
+            }
+
+            var handlers = this.events[ type ] || [];
+            var handlerWrap, h, index = 0;
+
+            while ( index < handlers.length ) {
+
+                handlerWrap = handlers[index];
+                h = handlerWrap.h;
+
+                if ( isFunction( h ) ) {
+                    h.call( null, msg, type );
+                } else if ( isObject( h ) && isFunction( h.handleEvent ) ) {
+                    h.handleEvent.call( h, type, msg );
+                }
+
+                if ( handlerWrap.one ) {
+                    handlers.splice( index, 1 );
+                } else {
+                    index++;
+                }
+            }
+        },
+
+        one : function ( type, handler ) {
+            this.addEventListener( type, handler, true );
+        }
+    };
+
+    emiter.on = emiter.addEventListener;
+    emiter.off = emiter.removeEventListener;
+
+    //脚本加载
+    var loader = {
+
+        currentAddingScript: null,
+
+        interactiveScript: null,
+
+        head: document.head || document.getElementsByTagName( 'head' )[ 0 ] || document.documentElement,
+
+        // http://goo.gl/U7ANEY
+        load: function ( url, callback, charset ) {
+
+            callback = callback || noop;
+
+            var self = this;
+            var head = this.head;
+            var script = document.createElement( 'script' );
+
+            script.setAttribute( 'type', 'text/javascript' );
+            script.setAttribute( 'async', true );
+
+            if ( charset ) {
+              script.charset = charset;
+            }
+
+            script.src = url;
+
+            function onLoad () {
+
+                script.onload = script.onreadystatechange = null;            
+
+                if ( head && script.parentNode ) {
+                    head.removeChild( script );
+                }
+
+                script = null;
+
+                callback();
+            }
+
+            if ( 'onload' in script ) {
+                script.onload = onLoad;
+            } else {
+                script.onreadystatechange = function () {
+                    if ( /loaded|complete/.test( script.readyState ) ) {
+                        onload();
+                    }
+                }
+            }
+
+            this.currentAddingScript = script;
+
+            head.insertBefore( script, head.firstChild );
+
+            this.currentAddingScript = null;
+        },
+
+        // http://goo.gl/bnu78W
+        getCurrentScript: function () {
+
+            if ( this.currentAddingScript ) {
+                return this.currentAddingScript;
+            }
+            
+            var interactiveScript = this.interactiveScript;
+            if ( interactiveScript && interactiveScript.readyState == 'interactive' ) {
+                return interactiveScript;
+            }
+
+            var scripts = this.head.getElementsByTagName( 'script' );
+            var script;
+
+            for ( var i = scripts.length - 1; i >= 0; i-- ) {
+                script = scripts[i];
+                if ( script.readyState == 'interactive' ) {
+                    this.interactiveScript = script;
+                    return this.interactiveScript;
+                }
+            }
+        }
+    };
+
+    //缓存模块 { uri: mod }
+    var cache = {};
+
+    var STATUS = {
+
+        META: 5, //生成模块的meta信息
+
+        FETCHING: 10, //正在加载文件
+
+        FETCHED: 12, //文件加载完毕, 即define执行完
+
+        TOLOAD: 14, //准备加载依赖
+
+        LOADING: 15, //加载依赖
+
+        LOADED: 20, //依赖加载完毕
+
+        DONE: 25 //执行完毕
+    };
+
+    var gid = 0;
+    
+    function genAnonyId () {
+        return '_kit_anony_mod_' + gid++;
+    }
+
+    function removeComments ( code ) {
+
+        return code.replace( /\/\*.*\*\//g, '' )
+                    .replace( /\/\/.*(?=[\n\t])/g, '')
+                    .replace( /^\s*\/\*[\s\S]*?\*\/\s*$/mg, '' );
+    }
+
+    function unique ( deps ) {
+        var ret = [];
+        var map = {};
+
+        for ( var i = 0, len = deps.length; i < len; i++ ) {
+            if ( !map[ deps[i] ] ) {
+                map[ deps[i] ] = 1;
+                ret.push( deps[i] );
+            }
+        }
+        return ret;
+    }
+
+    var requireReg = /\brequire\(\s*['"](\S*)['"]\s*\)/g;
+
+    function parseDeps ( code ) {
+
+        code = removeComments( code );
+
+        if ( code.indexOf( 'require' ) == '-1' ) {
+            return [];
+        }
+        
+        var deps = [], match;
+
+        while ( match = requireReg.exec( code ) ) {
+            deps.push( match[ 1 ] );
+        }
+        
+        return unique( deps );
+    }
+
+    function id2URI ( id ) {
+        //TODO 
+        if ( id ) {
+            return id + '.js';
+        }
+        return null;
+    }
+
+    function Module ( uri, deps, factory ) {
+
+        this.uri = uri;
+        this.deps = deps || [];
+        this.factory = factory;
+
+        this.exports = {};
+    }
+
+    extend( Module.prototype, {
+
+        load: function () {
+
+            var self = this;
+
+            if ( this.status < STATUS.FETCHING ) { //未获取文件
+
+                this.status = STATUS.FETCHING;
+                loader.load( this.uri, function () {
+                    self.status = STATUS.TOLOAD;
+                    self.load();
+                } );
+                return;
+            }
+
+            if ( this.status >= STATUS.LOADING ) {
+                return;
+            }
+
+            // 加载依赖
+            this.status = STATUS.LOADING;
+
+            var deps = this.deps;
+            var mod, uri, id;
+
+            var depsReady = 0;
+
+            function depReadyhandler () {
+                depsReady -= 1;
+
+                if ( depsReady == 0 ) {
+                    self.status = STATUS.LOADED;
+                    emiter.emit( self.uri + '.loaded', self );
+                }
+            }
+
+            for ( var i = deps.length - 1; i >= 0; i-- ) {
+
+                id = deps[i];
+                uri = id2URI( id );
+                mod = Module.get( uri );
+
+                if ( !mod ) {
+                    mod = Module.create( { id: id, uri: uri } );
+                }
+
+                if ( mod.status < STATUS.LOADED ) {
+
+                    depsReady += 1;
+                    emiter.one( uri + '.loaded', depReadyhandler );
+
+                    mod.load();
+                }
+            }
+
+            if ( depsReady == 0 ) {
+                self.status = STATUS.LOADED;
+                emiter.emit( self.uri + '.loaded', self );
+            }
+        },
+
+        exec: function () {
+            
+            var factory = this.factory;
+            function require ( id ) {
+                return Module.require( id );
+            }
+
+            factory( require, this.exports, this );
+
+            this.status = STATUS.DONE;
+        }
+    } );
+
+    extend( Module, {
+
+        get: function ( uri ) {
+            return cache[ uri ];
+        },
+
+        create: function ( meta ) {
+
+            var mod = this.get( meta.uri );
+            if ( !mod ) {
+                mod = new Module( meta.uri, meta.deps, meta.factory );
+
+                if ( mod.factory ) {
+                    mod.status = STATUS.FETCHED;
+                } else {
+                    mod.status = STATUS.META;
+                }
+                
+                cache[ mod.uri ] = mod;
+            } else {
+                mod.factory = meta.factory;
+                mod.deps = meta.deps;
+            }
+
+            return mod;
+        },
+
+        require: function ( id ) {
+            var mod = this.get( id2URI( id ) );
+
+            if ( mod.status != STATUS.DONE ) {
+                mod.exec();
+            }
+
+            return mod.exports;
+        }
+    } );
+
+    /**
+     * define( factory );
+     * define( 'dom', factory );
+     * define( 'scroll', [ 'dom', 'event' ], factory ); //兼容构建后
+     */
+    global.define = function () {
+
+        var id, factory, deps;
+        var args = [].slice.call( arguments );
+
+        switch (args.length) {
+
+            case 3:
+                id = args[0];
+                factory = args[2];
+                deps = args[1];
+                break;
+
+            case 2:
+                id = args[0];
+                factory = args[1];
+                deps = parseDeps( factory.toString() );
+                break;
+            case 1:
+                factory = args[0];
+                deps = parseDeps( factory.toString() );
+        }
+
+        var meta = {
+            id: id,
+            uri: id2URI( id ),
+            deps: deps,
+            factory: factory
+        };
+
+        if ( !meta.uri && document.attachEvent  ) {
+            var script = getCurrentScript();
+            if ( script ) {
+                meta.uri = script.src;
+            }
+        }
+
+        Module.create( meta );
+    };
+    
+    // just匿名模块
+    kit.use = function ( deps, callback ) {
+
+        var meta = {
+            uri: genAnonyId(),
+            deps: isArray( deps ) ? deps : [deps],
+            factory: callback || noop
+        };
+
+        var mod = Module.create( meta );
+
+        mod.load();
+
+        emiter.one( mod.uri + '.loaded', function () {
+            mod.exec();
+        } );
+
+        return kit;
+    };
+
+    kit.cache = cache;
+    
+    global.kit = kit;
+
+} )( this, undefined );

@@ -1,0 +1,15 @@
+{
+  "name": "kit",
+  "version": "1.0.0",
+  "description": "",
+  "main": "kid.js",
+  "devDependencies": {
+    "express": "~4.10",
+    "mocha": "~2.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
