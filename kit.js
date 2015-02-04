@@ -401,8 +401,8 @@
 
             this.status = STATUS.DONE;
 
-            //delete this.factory;
-            //delete this.deps;
+            delete this.factory;
+            delete this.deps;
         }
     } );
 
@@ -530,6 +530,7 @@
         return kit;
     };
     
+    kit.cache = cache;
     global.kit = kit;
 
     if ( !global.define ) {
