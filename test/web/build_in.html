@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <style>
+    #log {
+        background: grey;
+    }
+
+    pre {
+        background: 
+    }
+    </style>
+</head>
+<body>
+    <pre>
+    1.标题应为'搜狐视频'
+    2.log输出
+        dom
+        logger
+        repeat...
+        dom
+        logger
+    </pre>
+    <h1 id="title">标题1</h1>
+    log区域:
+    <div id="log"></div>
+    <script src="../../kit.js"></script>
+    <script src="../../testlib/all.js"></script>
+<script>
+
+kit.use( function ( require ) {
+
+    var dom = require( './testlib/dom' );
+    var logger = require( './testlib/logger' )( 'log' );
+    
+    logger.log( dom.name );
+    logger.log( logger.name );
+    dom.getById( 'title' ).innerHTML = '搜狐视频';
+} );
+
+kit.use( function ( require ) {
+
+    var logger = require( './testlib/logger' )( 'log' );
+    var dom = require( './testlib/dom' );
+    
+    logger.log( 'repeat...' );
+    logger.log( dom.name );
+    logger.log( logger.name );
+} );
+
+</script>
+</body>
+</html>

@@ -261,15 +261,33 @@ describe( 'emiter.emit', function () {
 
 describe( 'emiter.one', function () {
     
-    var a = 0;
+    it( 'one one', function () {
+        var a = 0;
 
-    emiter.one( 'insert', function () {
-        a = a + 5;
+        emiter.one( 'insert', function () {
+            a = a + 5;
+        } );
+
+        emiter.emit( 'insert' );
+        emiter.emit( 'insert' );
+        assert.equal( a, 5 );
+        assert.equal( 0, emiter.events[ 'insert' ].length );
     } );
+    
+    it( 'one more', function () {
+        var a = 0;
+        emiter.one( 'end1', function () {
+            a = 5;
+        } );
 
-    emiter.emit( 'insert' );
-    emiter.emit( 'insert' );
-    assert.equal( a, 5 );
-    assert.equal( 0, emiter.events[ 'insert' ].length );
+        emiter.one( 'end2', function () {
+            a = 6;
+        } );
 
+        emiter.emit( 'end1' );
+        emiter.emit( 'end2' );
+        assert.equal( 6, a );
+        assert.equal( 0, emiter.events[ 'end1' ].length );
+        assert.equal( 0, emiter.events[ 'end2' ].length );
+    } );
 } );

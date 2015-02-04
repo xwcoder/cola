@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <style>
+    #log {
+        background: grey;
+    }
+
+    pre {
+        background: 
+    }
+    </style>
+</head>
+<body>
+    <pre>
+        1.log输出
+            dom
+            logger
+            ajax:1.0.0
+        
+    </pre>
+    <h1 id="title">标题1</h1>
+    log区域:
+    <div id="log"></div>
+    <script src="../../kit.js"></script>
+<script>
+
+kit.use( function ( require ) {
+
+    var logger = require( './testlib/logger' )( 'log' );
+    var dom = require( './testlib/dom' );
+    var ajax = require( './testlib/ajax' );
+
+    logger.log( dom.name );
+    logger.log( logger.name );
+    logger.log( ajax.name + ':' + ajax.vertion );
+} );
+
+</script>
+</body>
+</html>

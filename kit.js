@@ -57,33 +57,33 @@
             }
         },
 
-        removeEventListener: function ( type, handler ) {
+        //removeEventListener: function ( type, handler ) {
 
-            if ( !type && !handler ) {
-                this.events = {};
-                return;
-            }
+        //    if ( !type && !handler ) {
+        //        this.events = {};
+        //        return;
+        //    }
 
-            if ( !handler ) {
-                delete this.events[ type ];
-                return;
-            }
+        //    if ( !handler ) {
+        //        delete this.events[ type ];
+        //        return;
+        //    }
 
-            var handlers = this.events[ type ] || [];
+        //    var handlers = this.events[ type ] || [];
 
-            var handlerWrap, index = 0;
-            
-            while ( index < handlers.length ) {
+        //    var handlerWrap, index = 0;
+        //    
+        //    while ( index < handlers.length ) {
 
-                handlerWrap = handlers[index];
+        //        handlerWrap = handlers[index];
 
-                if ( handler === handlerWrap.h ) {
-                    handlers.splice( index, 1 );
-                } else {
-                    index++;
-                }
-            }
-        },
+        //        if ( handler === handlerWrap.h ) {
+        //            handlers.splice( index, 1 );
+        //        } else {
+        //            index++;
+        //        }
+        //    }
+        //},
 
         emit: function ( type, msg ) {
 
@@ -119,7 +119,7 @@
     };
 
     emiter.on = emiter.addEventListener;
-    emiter.off = emiter.removeEventListener;
+    //emiter.off = emiter.removeEventListener;
 
     //脚本加载
     var loader = {
@@ -132,7 +132,6 @@
 
         // http://goo.gl/U7ANEY
         load: function ( url, callback, charset ) {
-
             callback = callback || noop;
 
             var self = this;
@@ -166,7 +165,7 @@
             } else {
                 script.onreadystatechange = function () {
                     if ( /loaded|complete/.test( script.readyState ) ) {
-                        onload();
+                        onLoad();
                     }
                 }
             }
@@ -206,21 +205,27 @@
     //缓存模块 { uri: mod }
     var cache = {};
 
+    // 配置项
+    var config = {
+        path: location.protocol + '//' + /:\/\/(.+?)\//.exec( location.href )[1],
+        main: 'index.js'
+    };
+
+    var anonyMeta;
+
     var STATUS = {
 
-        META: 5, //生成模块的meta信息
+        META: 10, //生成模块的meta信息
 
-        FETCHING: 10, //正在加载文件
+        FETCHING: 20, //正在加载文件
 
-        FETCHED: 12, //文件加载完毕, 即define执行完
+        FETCHED: 30, //文件加载完毕, 即define执行完
 
-        TOLOAD: 14, //准备加载依赖
+        LOADING: 40, //加载依赖
 
-        LOADING: 15, //加载依赖
+        LOADED: 50, //依赖加载完毕
 
-        LOADED: 20, //依赖加载完毕
-
-        DONE: 25 //执行完毕
+        DONE: 60 //执行完毕
     };
 
     var gid = 0;
@@ -268,12 +273,41 @@
         return unique( deps );
     }
 
-    function id2URI ( id ) {
-        //TODO 
-        if ( id ) {
-            return id + '.js';
+    function formatUri ( uri ) {
+        return uri = uri.split( '?' )[0].split( '#' )[0];
+    }
+
+    var REG_DOT_SLASH = /\/\.\//g;
+    var REG_MULTI_SLASH = /([^:])\/+\//g;
+    var REG_DOUBLE_SLASH = /\/[^\/]+\/\.\.\//;
+    var REG_HAS_PROTOCAL = /^[^:\/]+:\/\//;
+
+    function id2Uri ( id ) {
+        if ( !isString( id ) ) {
+            return;
         }
-        return null;
+
+        if ( REG_HAS_PROTOCAL.test( id ) ) {
+            return formatUri( id )
+        }
+
+        var uri = config.path + '/' + id;
+
+        uri = uri.replace( REG_DOT_SLASH, '/' ).replace( REG_MULTI_SLASH, '$1/' );
+
+        while ( REG_DOUBLE_SLASH.test( uri ) ) {
+            uri = uri.replace( REG_DOUBLE_SLASH, '/' );
+        }
+
+        uri = formatUri( uri );
+
+        if ( uri[uri.length-1] == '/' ) {
+            uri = uri + config.main;
+        } else if ( uri.substring( uri.length - 3 ) != '.js' ) {
+            uri = uri + '.js';
+        }
+
+        return uri;
     }
 
     function Module ( uri, deps, factory ) {
@@ -295,13 +329,18 @@
 
                 this.status = STATUS.FETCHING;
                 loader.load( this.uri, function () {
-                    self.status = STATUS.TOLOAD;
+                    if ( anonyMeta ) {
+                        self.factory = anonyMeta.factory;
+                        self.deps = anonyMeta.deps;
+                    }
+                    anonyMeta = null;
+                    self.status = STATUS.FETCHED;
                     self.load();
                 } );
                 return;
             }
 
-            if ( this.status >= STATUS.LOADING ) {
+            if ( this.status <= STATUS.FETCHING || this.status >= STATUS.LOADING ) {
                 return;
             }
 
@@ -318,14 +357,14 @@
 
                 if ( depsReady == 0 ) {
                     self.status = STATUS.LOADED;
-                    emiter.emit( self.uri + '.loaded', self );
+                    emiter.emit( self.uri, self );
                 }
             }
 
             for ( var i = deps.length - 1; i >= 0; i-- ) {
 
                 id = deps[i];
-                uri = id2URI( id );
+                uri = id2Uri( id );
                 mod = Module.get( uri );
 
                 if ( !mod ) {
@@ -335,7 +374,7 @@
                 if ( mod.status < STATUS.LOADED ) {
 
                     depsReady += 1;
-                    emiter.one( uri + '.loaded', depReadyhandler );
+                    emiter.one( uri, depReadyhandler );
 
                     mod.load();
                 }
@@ -343,11 +382,15 @@
 
             if ( depsReady == 0 ) {
                 self.status = STATUS.LOADED;
-                emiter.emit( self.uri + '.loaded', self );
+                emiter.emit( self.uri, self );
             }
         },
 
         exec: function () {
+
+            if ( this.status == STATUS.DONE ) {
+                return;
+            }
             
             var factory = this.factory;
             function require ( id ) {
@@ -357,6 +400,9 @@
             factory( require, this.exports, this );
 
             this.status = STATUS.DONE;
+
+            //delete this.factory;
+            //delete this.deps;
         }
     } );
 
@@ -388,7 +434,7 @@
         },
 
         require: function ( id ) {
-            var mod = this.get( id2URI( id ) );
+            var mod = this.get( id2Uri( id ) );
 
             if ( mod.status != STATUS.DONE ) {
                 mod.exec();
@@ -400,10 +446,11 @@
 
     /**
      * define( factory );
-     * define( 'dom', factory );
+     * define( './lib/dom', factory );
+     * define( ['./lib/dom', factory] );
      * define( 'scroll', [ 'dom', 'event' ], factory ); //兼容构建后
      */
-    global.define = function () {
+    kit.define = function () {
 
         var id, factory, deps;
         var args = [].slice.call( arguments );
@@ -417,9 +464,13 @@
                 break;
 
             case 2:
-                id = args[0];
                 factory = args[1];
-                deps = parseDeps( factory.toString() );
+                if ( isArray( args[0] ) ) {
+                    deps = args[0];
+                } else {
+                    id = args[0];
+                    deps = parseDeps( factory.toString() );
+                }
                 break;
             case 1:
                 factory = args[0];
@@ -427,44 +478,62 @@
         }
 
         var meta = {
-            id: id,
-            uri: id2URI( id ),
+            uri: id2Uri( id ),
             deps: deps,
             factory: factory
         };
 
         if ( !meta.uri && document.attachEvent  ) {
-            var script = getCurrentScript();
+            var script = loader.getCurrentScript();
             if ( script ) {
                 meta.uri = script.src;
             }
         }
 
-        Module.create( meta );
+        meta.uri ? Module.create( meta ) : anonyMeta = meta;
     };
     
     // just匿名模块
-    kit.use = function ( deps, callback ) {
+    kit.use = function () {
+
+        var args = [].slice.call( arguments );
+        var deps, factory;
+        
+        switch (args.length) {
+            case 2:
+                deps = args[0];
+                factory = args[1];
+                break;
+            case 1:
+                factory = args[0];
+                deps = parseDeps( factory.toString() );
+        }
 
         var meta = {
             uri: genAnonyId(),
             deps: isArray( deps ) ? deps : [deps],
-            factory: callback || noop
+            factory: factory || noop
         };
 
         var mod = Module.create( meta );
-
-        mod.load();
-
-        emiter.one( mod.uri + '.loaded', function () {
+        emiter.one( mod.uri, function () {
             mod.exec();
         } );
+
+        mod.load();
 
         return kit;
     };
 
-    kit.cache = cache;
+    kit.config = function ( _config ) {
+        extend( config, _config );
+        return kit;
+    };
     
     global.kit = kit;
+
+    if ( !global.define ) {
+        global.define = kit.define;
+    }
 
 } )( this, undefined );

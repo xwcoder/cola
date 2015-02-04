@@ -1,4 +1,4 @@
-define( './lib/event', function ( require, exports, module ) {
+define( './testlib/event', function ( require, exports, module ) {
     module.exports = {
         on: function () {
         
