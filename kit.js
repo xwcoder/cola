@@ -537,4 +537,4 @@
         global.define = kit.define;
     }
 
-} )( this, undefined );
+} )( this );
