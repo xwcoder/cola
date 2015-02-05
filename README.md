@@ -37,6 +37,6 @@
   main: 当模块id是目录(即以/结尾)时, 模块的文件名, 默认是index.js。如'./lib/dom' -> './lib/dom/index.js' 
 </pre>
 
-重复造这个轮子的初衷有两个:    
+写这个东西的初衷有两个:    
 1、准备写一个stand-alone的html5视频播放器, 所以需要一个stand-alone的模块加载器。这也是不强行占用全局define的原因。    
 2、练手
