@@ -2,7 +2,7 @@
 一个简单的cmd模块加载器
 
 ## 简介
-一个简单的cmd模块加载器。只有[kit.]define、kit.use、kit.config三个方法。暂不支持循环依赖。
+一个简单的cmd模块加载器。API只有[kit.]define、kit.use、kit.config三个。支持加载时的循环依赖, 执行阶段返回空对象。
 
 ## api
 

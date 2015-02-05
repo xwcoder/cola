@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <style>
+    #log {
+        background: grey;
+    }
+
+    pre {
+        background: 
+    }
+    </style>
+</head>
+<body>
+    <pre>
+        e -> f -> i -> h -> f
+        h -> e
+        e -> g
+        g -> h
+    </pre>
+    <h1 id="title">标题1</h1>
+    log区域:
+    <div id="log"></div>
+    <script src="../../kit.js"></script>
+<script>
+
+kit.use( function ( require ) {
+    var logger = require( './testlib/logger' )( 'log' );
+    var e = require( './testlib/e' );
+    var f = require( './testlib/f' );
+    var g = require( './testlib/g' );
+    var h = require( './testlib/h' );
+    var i = require( './testlib/i' );
+
+    logger.log( 'start...' );
+    logger.log( e.name );
+    logger.log( f.name );
+    logger.log( g.name );
+    logger.log( h.name );
+    logger.log( i.name );
+
+} );
+
+</script>
+</body>
+</html>

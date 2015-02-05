@@ -225,7 +225,9 @@
 
         LOADED: 50, //依赖加载完毕
 
-        DONE: 60 //执行完毕
+        EXECUTING: 60, //正在执行
+
+        DONE: 70 //执行完毕
     };
 
     var gid = 0;
@@ -310,6 +312,9 @@
         return uri;
     }
 
+    var fetchingCount = 0;
+    var loadingModules = {};
+
     function Module ( uri, deps, factory ) {
 
         this.uri = uri;
@@ -321,13 +326,22 @@
 
     extend( Module.prototype, {
 
-        load: function () {
+        onload: function () {
+            if ( this.status >= STATUS.LOADED ) {
+                return;
+            }
+            this.status = STATUS.LOADED;
+            emiter.emit( this.uri, this );
+        },
 
+        fetch: function () {
             var self = this;
 
             if ( this.status < STATUS.FETCHING ) { //未获取文件
 
                 this.status = STATUS.FETCHING;
+
+                fetchingCount++;
                 loader.load( this.uri, function () {
                     if ( anonyMeta ) {
                         self.factory = anonyMeta.factory;
@@ -335,8 +349,19 @@
                     }
                     anonyMeta = null;
                     self.status = STATUS.FETCHED;
+
+                    fetchingCount--;
                     self.load();
                 } );
+            }
+        },
+
+        load: function () {
+
+            var self = this;
+
+            if ( this.status < STATUS.FETCHING ) { //未获取文件
+                this.fetch();
                 return;
             }
 
@@ -346,7 +371,9 @@
 
             // 加载依赖
             this.status = STATUS.LOADING;
-
+            
+            loadingModules[ self.uri ] = self;
+            
             var deps = this.deps;
             var mod, uri, id;
 
@@ -356,10 +383,12 @@
                 depsReady -= 1;
 
                 if ( depsReady == 0 ) {
-                    self.status = STATUS.LOADED;
-                    emiter.emit( self.uri, self );
+                    self.onload();
                 }
             }
+
+            var toFetch = [];
+            var toLoad = [];
 
             for ( var i = deps.length - 1; i >= 0; i-- ) {
 
@@ -372,17 +401,31 @@
                 }
 
                 if ( mod.status < STATUS.LOADED ) {
-
+                    
                     depsReady += 1;
                     emiter.one( uri, depReadyhandler );
 
-                    mod.load();
+                    if ( mod.status <= STATUS.FETCHED) {
+                        toFetch.push( mod );
+                    } else {
+                        toLoad.push( mod );
+                    }
+                    //mod.load();
                 }
             }
 
             if ( depsReady == 0 ) {
-                self.status = STATUS.LOADED;
-                emiter.emit( self.uri, self );
+                self.onload();
+            } else {
+                for ( i = toFetch.length - 1; i >= 0; i-- ) {
+                    toFetch[i].fetch();
+                }
+
+                for ( i = toLoad.length - 1; i >= 0; i-- ) {
+                    toLoad[i].load();
+                }
+
+                Module.release();
             }
         },
 
@@ -397,6 +440,8 @@
                 return Module.require( id );
             }
 
+            this.status = STATUS.EXECUTING;
+
             factory( require, this.exports, this );
 
             this.status = STATUS.DONE;
@@ -407,6 +452,23 @@
     } );
 
     extend( Module, {
+
+        release: function () {
+
+            if ( fetchingCount > 0 ) {
+                return;
+            }
+
+            var uri, mod;
+
+            for ( uri in loadingModules ) {
+                mod = loadingModules[uri];
+                if ( mod.status == STATUS.LOADING ) {
+                    mod.onload();
+                }
+            }
+            loadingModules = {};
+        },
 
         get: function ( uri ) {
             return cache[ uri ];
@@ -434,9 +496,10 @@
         },
 
         require: function ( id ) {
+
             var mod = this.get( id2Uri( id ) );
 
-            if ( mod.status != STATUS.DONE ) {
+            if ( mod.status < STATUS.EXECUTING ) {
                 mod.exec();
             }
 
