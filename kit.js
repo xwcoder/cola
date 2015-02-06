@@ -387,7 +387,7 @@
                 }
             }
 
-            var toFetch = [];
+            //var toFetch = [];
             var toLoad = [];
 
             for ( var i = deps.length - 1; i >= 0; i-- ) {
@@ -406,7 +406,8 @@
                     emiter.one( uri, depReadyhandler );
 
                     if ( mod.status <= STATUS.FETCHED) {
-                        toFetch.push( mod );
+                        //toFetch.push( mod );
+                        mod.fetch();
                     } else {
                         toLoad.push( mod );
                     }
@@ -417,9 +418,9 @@
             if ( depsReady == 0 ) {
                 self.onload();
             } else {
-                for ( i = toFetch.length - 1; i >= 0; i-- ) {
-                    toFetch[i].fetch();
-                }
+                //for ( i = toFetch.length - 1; i >= 0; i-- ) {
+                //    toFetch[i].fetch();
+                //}
 
                 for ( i = toLoad.length - 1; i >= 0; i-- ) {
                     toLoad[i].load();
@@ -557,6 +558,9 @@
     };
     
     // just匿名模块
+    // kit.use( factory );
+    // kit.use( './lib/dom', factory );
+    // kit.use( ['./lib/dom', './lib/ajax'], factory );
     kit.use = function () {
 
         var args = [].slice.call( arguments );
