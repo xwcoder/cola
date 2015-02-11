@@ -26,10 +26,10 @@
     <h1 id="title">标题1</h1>
     log区域:
     <div id="log"></div>
-    <script src="../../kit.js"></script>
+    <script src="../../cola.js"></script>
 <script>
 
-kit.use( function ( require ) {
+cola.use( function ( require ) {
 
     var dom = require( './testlib/dom' );
     var logger = require( './testlib/logger' )( 'log' );
@@ -39,7 +39,7 @@ kit.use( function ( require ) {
     dom.getById( 'title' ).innerHTML = '搜狐视频';
 } );
 
-kit.use( function ( require ) {
+cola.use( function ( require ) {
 
     var logger = require( './testlib/logger' )( 'log' );
     var dom = require( './testlib/dom' );

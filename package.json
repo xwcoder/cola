@@ -1,8 +1,8 @@
 {
-  "name": "kit",
+  "name": "cola",
   "version": "1.0.0",
-  "description": "",
-  "main": "kid.js",
+  "description": "一个简单的cmd模块加载器",
+  "main": "cola.js",
   "devDependencies": {
     "express": "~4.10",
     "mocha": "~2.1"
@@ -10,6 +10,20 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC"
+  "author": "creep",
+  "license": "ISC",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "express": "^4.10.8"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xwcoder/cola.git"
+  },
+  "bugs": {
+    "url": "https://github.com/xwcoder/cola/issues"
+  },
+  "homepage": "https://github.com/xwcoder/cola"
 }

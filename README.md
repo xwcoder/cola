@@ -1,12 +1,12 @@
-# kit
+# cola
 一个简单的cmd模块加载器
 
 ## 简介
-一个简单的cmd模块加载器。遵循"as lazy as possible"的原则。API只有[kit.]define、kit.use、kit.config三个。支持加载时的循环依赖, 执行阶段返回空对象。解开循环依赖的[思路](https://github.com/seajs/seajs/issues/1436)。
+一个简单的cmd模块加载器。遵循"as lazy as possible"的原则。API只有[cola.]define、cola.use、cola.config三个。支持加载时的循环依赖, 执行阶段返回空对象。解开循环依赖的[思路](https://github.com/seajs/seajs/issues/1436)。
 
 ## api
 
-### [kit.]define()
+### [cola.]define()
 <pre>
  define( factory );
  define( './lib/dom', factory );
@@ -14,19 +14,19 @@
  define( 'scroll', [ 'dom', 'event' ], factory ); //兼容构建
 </pre>
 定义一个模块, 后两个api支持使用参数传递依赖, 不推荐使用。这两个api主要用于兼容构建工具优化。    
-如果全局空间已经有define的定义, 则将define挂在kit下。
+如果全局空间已经有define的定义, 则将define挂在cola下。
 
-### kit.use()
+### cola.use()
 <pre>
- kit.use( callback );
- kit.use( './lib/dom', callback );
- kit.use( ['./lib/dom'], callback] ); 
+ cola.use( callback );
+ cola.use( './lib/dom', callback );
+ cola.use( ['./lib/dom'], callback] ); 
 </pre>
 入口函数; 第一个参数为依赖模块, 即callback中要使用的模块; 如果没有通过参数传递依赖, 则通过callback解析依赖, 类似define()。
 
-### kit.config
+### cola.config
 <pre>
- kit.config( {
+ cola.config( {
      path: 'http://js.tv.itcn.com',
      main: 'index.js'
  } );

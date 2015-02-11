@@ -2,7 +2,7 @@
 
     'use strict';
 
-    var kit = {
+    var cola = {
         version: '1.0.0'
     };
 
@@ -239,7 +239,7 @@
     var gid = 0;
     
     function genAnonyId () {
-        return '_kit_anony_mod_' + gid++;
+        return '_cola_anony_mod_' + gid++;
     }
 
     function removeComments ( code ) {
@@ -520,7 +520,7 @@
      * define( ['./lib/dom', factory] );
      * define( 'scroll', [ 'dom', 'event' ], factory ); //兼容构建后
      */
-    kit.define = function () {
+    cola.define = function () {
 
         var id, factory, deps;
         var args = [].slice.call( arguments );
@@ -564,10 +564,10 @@
     };
     
     // just匿名模块
-    // kit.use( factory );
-    // kit.use( './lib/dom', factory );
-    // kit.use( ['./lib/dom', './lib/ajax'], factory );
-    kit.use = function () {
+    // cola.use( factory );
+    // cola.use( './lib/dom', factory );
+    // cola.use( ['./lib/dom', './lib/ajax'], factory );
+    cola.use = function () {
 
         var args = [].slice.call( arguments );
         var deps, factory;
@@ -595,19 +595,19 @@
 
         mod.load();
 
-        return kit;
+        return cola;
     };
 
-    kit.config = function ( _config ) {
+    cola.config = function ( _config ) {
         extend( config, _config );
-        return kit;
+        return cola;
     };
     
-    kit.cache = cache;
-    global.kit = kit;
+    cola.cache = cache;
+    global.cola = cola;
 
     if ( !global.define ) {
-        global.define = kit.define;
+        global.define = cola.define;
     }
 
 } )( this );
