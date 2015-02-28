@@ -26,7 +26,12 @@
     <script src="../../cola.js"></script>
     <script src="../../testlib/efghi.js"></script>
 <script>
-
+cola.alias( {
+    global: { path: 'http://js.tv.itc.cn/base/core/g_755eb8.js', exports: 'sohuHD' },
+    passport: { path: 'http://js.tv.itc.cn/base/core/newpassport_dccea4.js', exports: 'PassportSC' },
+    jquery: { path: 'http://js.tv.itc.cn/base/core/j_1.7.2.js', exports: 'jQuery' },
+    winbox: { path : 'http://js.tv.itc.cn/base/plugin/showwin_47c856.js', requires : [ 'jquery', 'global' ], exports: 'sohuHD.showWin' }
+} );
 cola.use( function ( require ) {
     var logger = require( './testlib/logger' )( 'log' );
     var e = require( './testlib/e' );
@@ -34,6 +39,8 @@ cola.use( function ( require ) {
     var g = require( './testlib/g' );
     var h = require( './testlib/h' );
     var i = require( './testlib/i' );
+
+    var dom = require( './testlib/alias/dom' );
 
     logger.log( 'start...' );
     logger.log( e.name );

@@ -32,7 +32,7 @@
 
         events: {},
 
-        addEventListener: function ( type, handler, one ) {
+        on: function ( type, handler, one ) {
 
             if ( !type || !handler ) {
                 return;
@@ -56,34 +56,6 @@
                 handlers.push( { h: handler, one: one } );
             }
         },
-
-        //removeEventListener: function ( type, handler ) {
-
-        //    if ( !type && !handler ) {
-        //        this.events = {};
-        //        return;
-        //    }
-
-        //    if ( !handler ) {
-        //        delete this.events[ type ];
-        //        return;
-        //    }
-
-        //    var handlers = this.events[ type ] || [];
-
-        //    var handlerWrap, index = 0;
-        //    
-        //    while ( index < handlers.length ) {
-
-        //        handlerWrap = handlers[index];
-
-        //        if ( handler === handlerWrap.h ) {
-        //            handlers.splice( index, 1 );
-        //        } else {
-        //            index++;
-        //        }
-        //    }
-        //},
 
         emit: function ( type, msg ) {
 
@@ -114,12 +86,9 @@
         },
 
         one : function ( type, handler ) {
-            this.addEventListener( type, handler, true );
+            this.on( type, handler, true );
         }
     };
-
-    emiter.on = emiter.addEventListener;
-    //emiter.off = emiter.removeEventListener;
 
     //脚本加载
     var loader = {
@@ -217,6 +186,8 @@
         main: 'index.js'
     };
 
+    var alias = config.alias = {};
+
     var anonyMeta;
 
     var STATUS = {
@@ -290,15 +261,24 @@
     var REG_DOUBLE_SLASH = /\/[^\/]+\/\.\.\//;
     var REG_HAS_PROTOCAL = /^[^:\/]+:\/\//;
 
+    function getAlias ( id ) {
+        return alias[ id ];
+    }
+
     function id2Uri ( id ) {
+
         if ( !isString( id ) ) {
             return;
         }
 
+        if ( getAlias( id ) ) {
+            id = getAlias( id ).path;
+        }
+        
         if ( REG_HAS_PROTOCAL.test( id ) ) {
             return formatUri( id )
         }
-
+        
         var uri = config.path + '/' + id;
 
         uri = uri.replace( REG_DOT_SLASH, '/' ).replace( REG_MULTI_SLASH, '$1/' );
@@ -341,6 +321,12 @@
         },
 
         fetch: function () {
+            
+            if ( this.isAlias ) {
+                this.aliasFetch();
+                return;
+            }
+
             var self = this;
 
             if ( this.status < STATUS.FETCHING ) { //未获取文件
@@ -359,6 +345,64 @@
                     fetchingCount--;
                     self.load();
                 } );
+            }
+        },
+
+        aliasFetch: function () {
+
+            if ( this.status >= STATUS.FETCHING ) {
+                return;
+            }
+
+            var self = this;
+            var depsReady = 0;
+            var depReadyhandler = function () {
+
+                depsReady -= 1;
+
+                if ( depsReady <= 0 ) {
+
+                    fetchingCount++;
+                    loader.load( self.uri, function () {
+
+                        fetchingCount--;
+                        self.onload();
+
+                        Module.release();
+                    } );
+                }
+            };
+
+            this.status = STATUS.FETCHING;
+            var deps = this.deps || [];
+            var meta, mod, uri, id, alias;
+
+            for ( var i = deps.length - 1; i >= 0; i-- ) {
+                id = deps[i];
+                uri = id2Uri( id );
+                mod = Module.get( uri );
+                if ( !mod ) {
+                    meta = { id: id, uri: uri };
+                    alias = getAlias( id );
+                    if ( !alias ) {
+                        throw new Error( 'alias module\'s dep must be alias' );
+                    }
+
+                    extend( meta, { deps: alias.requires || [] } );
+                    mod = Module.create( meta );
+                    mod.alias = alias;
+                    mod.isAlias = !!alias;
+                }
+                if ( mod.status < STATUS.LOADED ) {
+                    depsReady += 1;
+                    emiter.one( uri, depReadyhandler );
+
+                    mod.fetch();
+                }
+            }
+
+            if ( depsReady == 0 ) {
+                depReadyhandler();
             }
         },
 
@@ -381,7 +425,7 @@
             loadingModules[ self.uri ] = self;
             
             var deps = this.deps;
-            var mod, uri, id;
+            var meta, mod, uri, id, alias;
 
             var depsReady = 0;
 
@@ -393,7 +437,6 @@
                 }
             }
 
-            //var toFetch = [];
             var toLoad = [];
 
             for ( var i = deps.length - 1; i >= 0; i-- ) {
@@ -403,7 +446,14 @@
                 mod = Module.get( uri );
 
                 if ( !mod ) {
-                    mod = Module.create( { id: id, uri: uri } );
+                    meta = { id: id, uri: uri };
+                    alias = getAlias( id );
+                    if ( alias ) {
+                        extend( meta, { deps: alias.requires || [] } );
+                    }
+                    mod = Module.create( meta );
+                    mod.alias = alias;
+                    mod.isAlias = !!alias;
                 }
 
                 if ( mod.status < STATUS.LOADED ) {
@@ -411,22 +461,17 @@
                     depsReady += 1;
                     emiter.one( uri, depReadyhandler );
 
-                    if ( mod.status <= STATUS.FETCHED) {
-                        //toFetch.push( mod );
+                    if ( mod.status <= STATUS.FETCHED ) {
                         mod.fetch();
                     } else {
                         toLoad.push( mod );
                     }
-                    //mod.load();
                 }
             }
 
             if ( depsReady == 0 ) {
                 self.onload();
             } else {
-                //for ( i = toFetch.length - 1; i >= 0; i-- ) {
-                //    toFetch[i].fetch();
-                //}
 
                 for ( i = toLoad.length - 1; i >= 0; i-- ) {
                     toLoad[i].load();
@@ -441,15 +486,31 @@
             if ( this.status == STATUS.DONE ) {
                 return;
             }
-            
-            var factory = this.factory;
+
             function require ( id ) {
                 return Module.require( id );
             }
 
-            this.status = STATUS.EXECUTING;
+            if ( this.isAlias ) {
 
-            factory( require, this.exports, this );
+                var alias = this.alias || {};
+                if ( isString( alias.exports ) ) {
+                    this.exports = global[ alias.exports ];
+                    var exports = alias.exports.split( '.' );
+                    var sup = global;
+                    for ( var i = 0, len = exports.length; i < len; i++ ) {
+                        this.exports = sup[ exports[i] ];
+                        sup = this.exports;
+                    }
+                }
+
+            } else {
+                var factory = this.factory;
+
+                this.status = STATUS.EXECUTING;
+
+                factory( require, this.exports, this );
+            }
 
             this.status = STATUS.DONE;
 
@@ -460,6 +521,7 @@
 
     extend( Module, {
 
+        //解开循环依赖
         release: function () {
 
             if ( fetchingCount > 0 ) {
@@ -601,6 +663,10 @@
     cola.config = function ( _config ) {
         extend( config, _config );
         return cola;
+    };
+
+    cola.alias = function ( _alias ) {
+        extend( alias, _alias );
     };
     
     cola.cache = cache;

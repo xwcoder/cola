@@ -3,24 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <title></title>
-    <style>
-    #log {
-        background: grey;
-    }
-
-    pre {
-        background: 
-    }
-    </style>
 </head>
 <body>
-    <pre>
-        a -> b —> c -> d -> a
-    </pre>
-    <h1 id="title">标题1</h1>
-    log区域:
-    <div id="log"></div>
-    <script src="../../cola.js"></script>
+<div id="log"></div>
+
+<script src="../../cola.js"></script>
 <script>
 cola.alias( {
     global: { path: 'http://js.tv.itc.cn/base/core/g_755eb8.js', exports: 'sohuHD' },
@@ -28,24 +15,28 @@ cola.alias( {
     jquery: { path: 'http://js.tv.itc.cn/base/core/j_1.7.2.js', exports: 'jQuery' },
     winbox: { path : 'http://js.tv.itc.cn/base/plugin/showwin_47c856.js', requires : [ 'jquery', 'global' ], exports: 'sohuHD.showWin' }
 } );
+</script>
+<script>
+//cola.use( function ( require ) {
+//    var showWin = require( 'winbox' );
+//    var passport = require( 'passport' );
+//
+//    var $ = require( 'jquery' );
+//    
+//    var logger = require( './testlib/logger' )( 'log' );
+//    
+//    logger.log( 'passport:' + passport.cookieHandle() );
+//} );
 
-cola.use( function ( require ) {
-    var logger = require( './testlib/logger' )( 'log' );
-    var a = require( './testlib/a' );
-    var b = require( './testlib/b' );
-    var c = require( './testlib/c' );
-    var d = require( './testlib/d' );
-
-    var dom = require( './testlib/alias/dom' );
-
-    logger.log( 'start...' );
-    logger.log( a.name );
-    logger.log( b.name );
-    logger.log( c.name );
-    logger.log( d.name );
-
+cola.alias( {
+    global: { path: 'http://js.tv.itc.cn/base/core/g_755eb8.js', requires: [ 'jquery' ], exports: 'sohuHD' },
 } );
-
+cola.use( function ( require ) {
+    //var logger = require( './testlib/logger' )( 'log' );
+    var dom = require( './testlib/alias/dom' );
+    
+    //logger.log( dom.name );
+} );
 </script>
 </body>
 </html>
