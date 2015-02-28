@@ -3,7 +3,7 @@ define( './testlib/alias/dom', function ( require, exports, module ) {
     //var ajax = require( './testlib/ajax' );
     var showWin = require( 'winbox' );
 
-    console.log( showWin );
+    //console.log( showWin );
     module.exports = {
 
         name: 'dom',

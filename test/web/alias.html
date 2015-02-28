@@ -32,10 +32,11 @@ cola.alias( {
     global: { path: 'http://js.tv.itc.cn/base/core/g_755eb8.js', requires: [ 'jquery' ], exports: 'sohuHD' },
 } );
 cola.use( function ( require ) {
-    //var logger = require( './testlib/logger' )( 'log' );
+    var $ = require( 'jquery' );
+    var logger = require( './testlib/logger' )( 'log' );
     var dom = require( './testlib/alias/dom' );
-    
-    //logger.log( dom.name );
+
+    logger.log( dom.name );
 } );
 </script>
 </body>
