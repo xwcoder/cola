@@ -375,23 +375,14 @@
 
             this.status = STATUS.FETCHING;
             var deps = this.deps || [];
-            var meta, mod, uri, id, alias;
+            var mod, uri, id;
 
             for ( var i = deps.length - 1; i >= 0; i-- ) {
                 id = deps[i];
                 uri = id2Uri( id );
                 mod = Module.get( uri );
                 if ( !mod ) {
-                    meta = { id: id, uri: uri };
-                    alias = getAlias( id );
-                    if ( !alias ) {
-                        throw new Error( 'alias module\'s dep must be alias' );
-                    }
-
-                    extend( meta, { deps: alias.requires || [] } );
-                    mod = Module.create( meta );
-                    mod.alias = alias;
-                    mod.isAlias = !!alias;
+                    mod = Module.create( { id: id, uri: uri } );
                 }
                 if ( mod.status < STATUS.LOADED ) {
                     depsReady += 1;
@@ -425,7 +416,7 @@
             loadingModules[ self.uri ] = self;
             
             var deps = this.deps;
-            var meta, mod, uri, id, alias;
+            var mod, uri, id;
 
             var depsReady = 0;
 
@@ -446,14 +437,7 @@
                 mod = Module.get( uri );
 
                 if ( !mod ) {
-                    meta = { id: id, uri: uri };
-                    alias = getAlias( id );
-                    if ( alias ) {
-                        extend( meta, { deps: alias.requires || [] } );
-                    }
-                    mod = Module.create( meta );
-                    mod.alias = alias;
-                    mod.isAlias = !!alias;
+                    mod = Module.create( { id: id, uri: uri } );
                 }
 
                 if ( mod.status < STATUS.LOADED ) {
@@ -546,8 +530,21 @@
         create: function ( meta ) {
 
             var mod = this.get( meta.uri );
+            var alias;
+
             if ( !mod ) {
+
+                if ( meta.id ) {
+                    alias = getAlias( meta.id );
+                    if ( alias ) {
+                        meta.deps = alias.requires || [];
+                    }
+                }
+
                 mod = new Module( meta.uri, meta.deps, meta.factory );
+
+                mod.alias = alias;
+                mod.isAlias = !!alias;
 
                 if ( mod.factory ) {
                     mod.status = STATUS.FETCHED;
