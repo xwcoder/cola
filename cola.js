@@ -260,12 +260,13 @@
     var REG_MULTI_SLASH = /([^:])\/+\//g;
     var REG_DOUBLE_SLASH = /\/[^\/]+\/\.\.\//;
     var REG_HAS_PROTOCAL = /^[^:\/]+:\/\//;
+    var REG_DIR_NAME = /\/[^\/]*\.[^\/]*$/;
 
     function getAlias ( id ) {
         return alias[ id ];
     }
 
-    function id2Uri ( id ) {
+    function id2Uri ( id, relativeUri ) {
 
         if ( !isString( id ) ) {
             return;
@@ -278,8 +279,18 @@
         if ( REG_HAS_PROTOCAL.test( id ) ) {
             return formatUri( id )
         }
-        
-        var uri = config.path + '/' + id;
+
+        var path = config.path;
+
+        // if id start with './' or '../' and relativeUri has protocal, 
+        // then use id and relativeUri to generate module's uri
+        if ( ( id.indexOf( '../' ) == 0 || id.indexOf( './' ) == 0 )
+                && relativeUri
+                && REG_HAS_PROTOCAL.test( relativeUri ) ) {
+            path = relativeUri.replace( REG_DIR_NAME, '' );
+        }
+
+        var uri = path + '/' + id;
 
         uri = uri.replace( REG_DOT_SLASH, '/' ).replace( REG_MULTI_SLASH, '$1/' );
 
@@ -433,7 +444,7 @@
             for ( var i = deps.length - 1; i >= 0; i-- ) {
 
                 id = deps[i];
-                uri = id2Uri( id );
+                uri = id2Uri( id, self.uri );
                 mod = Module.get( uri );
 
                 if ( !mod ) {
@@ -471,8 +482,10 @@
                 return;
             }
 
+            var relativeUri = this.uri;
+
             function require ( id ) {
-                return Module.require( id );
+                return Module.require( id, relativeUri );
             }
 
             if ( this.isAlias ) {
@@ -561,9 +574,9 @@
             return mod;
         },
 
-        require: function ( id ) {
+        require: function ( id, relativeUri ) {
 
-            var mod = this.get( id2Uri( id ) );
+            var mod = this.get( id2Uri( id, relativeUri ) );
 
             if ( mod.status < STATUS.EXECUTING ) {
                 mod.exec();
@@ -578,6 +591,9 @@
      * define( './lib/dom', factory );
      * define( ['./lib/dom', factory] );
      * define( 'scroll', [ 'dom', 'event' ], factory ); //兼容构建后
+     *
+     * define时, 依赖的模块如果是绝对路径(非'./'或者'../'开头), 计算时使用config.path;
+     * 依赖的模块如果是相对路径(以'./'或者'../'开头), 计算时使用模块的uri。
      */
     cola.define = function () {
 
@@ -622,10 +638,14 @@
         meta.uri ? Module.create( meta ) : anonyMeta = meta;
     };
     
-    // just匿名模块
-    // cola.use( factory );
-    // cola.use( './lib/dom', factory );
-    // cola.use( ['./lib/dom', './lib/ajax'], factory );
+    /**
+     * just匿名模块
+     * cola.use( factory );
+     * cola.use( './lib/dom', factory );
+     * cola.use( ['./lib/dom', './lib/ajax'], factory );
+     * 
+     * config.use时, 路径都是相对config.path, 不管是相对路径或是绝对路径
+     */
     cola.use = function () {
 
         var args = [].slice.call( arguments );

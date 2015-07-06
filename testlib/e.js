@@ -1,6 +1,6 @@
 define( './testlib/e', function ( require, exports, module ) {
-    var f = require( './testlib/f' );
-    var g = require( './testlib/g' );
+    var f = require( './f' );
+    var g = require( './g' );
 
     module.exports = {
         name: 'moduleE'

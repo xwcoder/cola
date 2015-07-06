@@ -1,6 +1,6 @@
 define( './testlib/dom', function ( require, exports, module ) {
     
-    var ajax = require( './testlib/ajax' );
+    var ajax = require( './ajax' );
     module.exports = {
 
         name: 'dom',
