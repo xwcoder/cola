@@ -645,6 +645,16 @@
      * cola.use( ['./lib/dom', './lib/ajax'], factory );
      * 
      * config.use时, 路径都是相对config.path, 不管是相对路径或是绝对路径
+     * 原因: 无法兼容获取当前运行脚本的路径(src)
+     *  1. document.currentScript
+     *      Firefox 4+, Chrome 29+, Opera 16+, Safari 8+.
+     *  2. readyState属性为interative的script元素, 见getCurrentScript
+     *      IE5-9
+     *  3. document.scripts[document.scripts.length - 1].src
+     *      不适用异步加载的情况
+     *  4. 制造异常，使用error的属性
+     *      IE10+, Safari 7-, Opera 15-.
+     *      但是得到的是出错函数所在脚本路径{cola.js}, 而不是使用cola.use的脚本路径
      */
     cola.use = function () {
 
