@@ -1,4 +1,4 @@
-( function ( global, undefined ) {
+(function (global, undefined) {
 
     'use strict';
 
@@ -8,38 +8,38 @@
 
     var noop = function () {};
 
-    var extend = function ( o, c ) {
+    var extend = function (o, c) {
 
         if ( c && typeof c == 'object' ) {
             for ( var p in c ) {
-                o[ p ] = c[ p ];
+                o[p] = c[p];
             }
         }
     };
     
-    var isType = function ( type ) {
-        return function ( obj ) {
-            return {}.toString.call( obj ) == '[object ' + type + ']';
-        }
+    var isType = function (type) {
+        return function (obj) {
+            return {}.toString.call(obj) == '[object ' + type + ']';
+        };
     };
 
-    var isObject = isType( 'Object' );
-    var isFunction = isType( 'Function' );
-    var isArray = Array.isArray || isType( 'Array' );
-    var isString = isType( 'String' );
+    var isObject = isType('Object');
+    var isFunction = isType('Function');
+    var isArray = Array.isArray || isType('Array');
+    var isString = isType('String');
 
     var emiter = {
 
         events: {},
 
-        on: function ( type, handler, one ) {
+        on: function (type, handler, one) {
 
             if ( !type || !handler ) {
                 return;
             }
 
-            this.events[ type ] = this.events[ type ] || [];
-            var handlers = this.events[ type ];
+            this.events[type] = this.events[type] || [];
+            var handlers = this.events[type];
 
             var handlerWrap, has;
 
@@ -53,17 +53,17 @@
             }
             
             if ( !has ) {
-                handlers.push( { h: handler, one: one } );
+                handlers.push({ h: handler, one: one });
             }
         },
 
-        emit: function ( type, msg ) {
+        emit: function (type, msg) {
 
             if ( !type ) {
                 return;
             }
 
-            var handlers = this.events[ type ] || [];
+            var handlers = this.events[type] || [];
             var handlerWrap, h, index = 0;
 
             while ( index < handlers.length ) {
@@ -71,22 +71,22 @@
                 handlerWrap = handlers[index];
                 h = handlerWrap.h;
 
-                if ( isFunction( h ) ) {
-                    h.call( null, msg, type );
-                } else if ( isObject( h ) && isFunction( h.handleEvent ) ) {
-                    h.handleEvent.call( h, type, msg );
+                if ( isFunction(h) ) {
+                    h.call(null, msg, type);
+                } else if ( isObject(h) && isFunction(h.handleEvent) ) {
+                    h.handleEvent.call(h, type, msg);
                 }
 
                 if ( handlerWrap.one ) {
-                    handlers.splice( index, 1 );
+                    handlers.splice(index, 1);
                 } else {
                     index++;
                 }
             }
         },
 
-        one : function ( type, handler ) {
-            this.on( type, handler, true );
+        one : function (type, handler) {
+            this.on(type, handler, true);
         }
     };
 
@@ -97,18 +97,18 @@
 
         interactiveScript: null,
 
-        head: document.head || document.getElementsByTagName( 'head' )[ 0 ] || document.documentElement,
+        head: document.head || document.getElementsByTagName('head')[0] || document.documentElement,
 
         // http://goo.gl/U7ANEY
-        load: function ( url, callback, charset ) {
+        load: function (url, callback, charset) {
             callback = callback || noop;
 
             var self = this;
             var head = this.head;
-            var script = document.createElement( 'script' );
+            var script = document.createElement('script');
 
-            script.setAttribute( 'type', 'text/javascript' );
-            script.setAttribute( 'async', true );
+            script.setAttribute('type', 'text/javascript');
+            script.setAttribute('async', true);
 
             if ( charset ) {
               script.charset = charset;
@@ -121,7 +121,7 @@
                 script.onload = script.onreadystatechange = null;            
 
                 if ( head && script.parentNode ) {
-                    head.removeChild( script );
+                    head.removeChild(script);
                 }
 
                 script = null;
@@ -133,7 +133,7 @@
                 script.onload = onLoad;
             } else {
                 script.onreadystatechange = function () {
-                    if ( /loaded|complete/.test( script.readyState ) ) {
+                    if ( /loaded|complete/.test(script.readyState) ) {
                         onLoad();
                     }
                 }
@@ -141,7 +141,7 @@
 
             this.currentAddingScript = script;
 
-            head.insertBefore( script, head.firstChild );
+            head.insertBefore(script, head.firstChild);
 
             this.currentAddingScript = null;
         },
@@ -158,7 +158,7 @@
                 return interactiveScript;
             }
 
-            var scripts = this.head.getElementsByTagName( 'script' );
+            var scripts = this.head.getElementsByTagName('script');
             var script;
 
             for ( var i = scripts.length - 1; i >= 0; i-- ) {
@@ -176,13 +176,13 @@
 
     // 配置项
     var config = {
-        path: function () {
+        path: (function () {
             var nodes = document.getElementsByTagName( 'script' );
             var node = nodes[nodes.length - 1];
             ///^(.+:\/\/.+?)(?:\/|$)/.exec( node.src );
             /^(.+:\/\/.+)(?:\/)/.exec( node.src );
             return RegExp.$1;
-        }(),
+        })(),
         main: 'index.js'
     };
 
@@ -213,21 +213,21 @@
         return '_cola_anony_mod_' + gid++;
     }
 
-    function removeComments ( code ) {
+    function removeComments (code) {
 
-        return code.replace( /\/\*.*\*\//g, '' )
-                    .replace( /\/\/.*(?=[\n\t])/g, '')
-                    .replace( /^\s*\/\*[\s\S]*?\*\/\s*$/mg, '' );
+        return code.replace(/\/\*.*\*\//g, '')
+                    .replace(/\/\/.*(?=[\n\t])/g, '')
+                    .replace(/^\s*\/\*[\s\S]*?\*\/\s*$/mg, '');
     }
 
-    function unique ( deps ) {
+    function unique (deps) {
         var ret = [];
         var map = {};
 
         for ( var i = 0, len = deps.length; i < len; i++ ) {
-            if ( !map[ deps[i] ] ) {
-                map[ deps[i] ] = 1;
-                ret.push( deps[i] );
+            if ( !map[deps[i]] ) {
+                map[deps[i]] = 1;
+                ret.push(deps[i]);
             }
         }
         return ret;
@@ -235,25 +235,25 @@
 
     var requireReg = /\brequire\(\s*['"](\S*)['"]\s*\)/g;
 
-    function parseDeps ( code ) {
+    function parseDeps (code) {
 
-        code = removeComments( code );
+        code = removeComments(code);
 
-        if ( code.indexOf( 'require' ) == '-1' ) {
+        if ( code.indexOf('require') == '-1' ) {
             return [];
         }
         
         var deps = [], match;
 
-        while ( match = requireReg.exec( code ) ) {
-            deps.push( match[ 1 ] );
+        while ( match = requireReg.exec(code) ) {
+            deps.push(match[1]);
         }
         
-        return unique( deps );
+        return unique(deps);
     }
 
-    function formatUri ( uri ) {
-        return uri = uri.split( '?' )[0].split( '#' )[0];
+    function formatUri (uri) {
+        return uri = uri.split('?')[0].split('#')[0];
     }
 
     var REG_DOT_SLASH = /\/\.\//g;
@@ -262,48 +262,52 @@
     var REG_HAS_PROTOCAL = /^[^:\/]+:\/\//;
     var REG_DIR_NAME = /\/[^\/]*\.[^\/]*$/;
 
-    function getAlias ( id ) {
-        return alias[ id ];
+    function getAlias (id) {
+        return alias[id];
     }
 
-    function id2Uri ( id, relativeUri ) {
+    function id2Uri (id, relativeUri) {
 
-        if ( !isString( id ) ) {
+        if ( !isString(id) ) {
             return;
         }
 
-        if ( getAlias( id ) ) {
-            id = getAlias( id ).path;
+        var _id = id;
+        if ( getAlias(id) ) {
+            id = getAlias(id).path;
         }
         
-        if ( REG_HAS_PROTOCAL.test( id ) ) {
-            return formatUri( id )
+        if ( REG_HAS_PROTOCAL.test(id) ) {
+            return id;
+            //return formatUri(id);
         }
 
         var path = config.path;
 
         // if id start with './' or '../' and relativeUri has protocal, 
         // then use id and relativeUri to generate module's uri
-        if ( ( id.indexOf( '../' ) == 0 || id.indexOf( './' ) == 0 )
+        if ( ( id.indexOf('../') == 0 || id.indexOf('./') == 0 )
                 && relativeUri
-                && REG_HAS_PROTOCAL.test( relativeUri ) ) {
-            path = relativeUri.replace( REG_DIR_NAME, '' );
+                && REG_HAS_PROTOCAL.test(relativeUri) ) {
+            path = relativeUri.replace(REG_DIR_NAME, '');
         }
 
         var uri = path + '/' + id;
 
-        uri = uri.replace( REG_DOT_SLASH, '/' ).replace( REG_MULTI_SLASH, '$1/' );
+        uri = uri.replace(REG_DOT_SLASH, '/').replace(REG_MULTI_SLASH, '$1/');
 
-        while ( REG_DOUBLE_SLASH.test( uri ) ) {
-            uri = uri.replace( REG_DOUBLE_SLASH, '/' );
+        while ( REG_DOUBLE_SLASH.test(uri) ) {
+            uri = uri.replace(REG_DOUBLE_SLASH, '/');
         }
 
-        uri = formatUri( uri );
+        if ( !getAlias(_id) ) {
+            uri = formatUri(uri);
 
-        if ( uri[uri.length-1] == '/' ) {
-            uri = uri + config.main;
-        } else if ( uri.substring( uri.length - 3 ) != '.js' ) {
-            uri = uri + '.js';
+            if ( uri[uri.length-1] == '/' ) {
+                uri = uri + config.main;
+            } else if ( uri.substring(uri.length - 3) != '.js' ) {
+                uri = uri + '.js';
+            }
         }
 
         return uri;
@@ -312,7 +316,7 @@
     var fetchingCount = 0;
     var loadingModules = {};
 
-    function Module ( uri, deps, factory ) {
+    function Module (uri, deps, factory) {
 
         this.uri = uri;
         this.deps = deps || [];
@@ -328,7 +332,7 @@
                 return;
             }
             this.status = STATUS.LOADED;
-            emiter.emit( this.uri, this );
+            emiter.emit(this.uri, this);
         },
 
         fetch: function () {
@@ -345,7 +349,7 @@
                 this.status = STATUS.FETCHING;
 
                 fetchingCount++;
-                loader.load( this.uri, function () {
+                loader.load(this.uri, function () {
                     if ( anonyMeta ) {
                         self.factory = anonyMeta.factory;
                         self.deps = anonyMeta.deps;
@@ -355,7 +359,7 @@
 
                     fetchingCount--;
                     self.load();
-                } );
+                });
             }
         },
 
@@ -374,13 +378,13 @@
                 if ( depsReady <= 0 ) {
 
                     fetchingCount++;
-                    loader.load( self.uri, function () {
+                    loader.load(self.uri, function () {
 
                         fetchingCount--;
                         self.onload();
 
                         Module.release();
-                    } );
+                    });
                 }
             };
 
@@ -397,7 +401,7 @@
                 }
                 if ( mod.status < STATUS.LOADED ) {
                     depsReady += 1;
-                    emiter.one( uri, depReadyhandler );
+                    emiter.one(uri, depReadyhandler);
 
                     mod.fetch();
                 }
@@ -424,7 +428,7 @@
             // 加载依赖
             this.status = STATUS.LOADING;
             
-            loadingModules[ self.uri ] = self;
+            loadingModules[self.uri] = self;
             
             var deps = this.deps;
             var mod, uri, id;
@@ -444,22 +448,22 @@
             for ( var i = deps.length - 1; i >= 0; i-- ) {
 
                 id = deps[i];
-                uri = id2Uri( id, self.uri );
-                mod = Module.get( uri );
+                uri = id2Uri(id, self.uri);
+                mod = Module.get(uri);
 
                 if ( !mod ) {
-                    mod = Module.create( { id: id, uri: uri } );
+                    mod = Module.create({ id: id, uri: uri });
                 }
 
                 if ( mod.status < STATUS.LOADED ) {
                     
                     depsReady += 1;
-                    emiter.one( uri, depReadyhandler );
+                    emiter.one(uri, depReadyhandler);
 
                     if ( mod.status <= STATUS.FETCHED ) {
                         mod.fetch();
                     } else {
-                        toLoad.push( mod );
+                        toLoad.push(mod);
                     }
                 }
             }
@@ -484,19 +488,19 @@
 
             var relativeUri = this.uri;
 
-            function require ( id ) {
-                return Module.require( id, relativeUri );
+            function require (id) {
+                return Module.require(id, relativeUri);
             }
 
             if ( this.isAlias ) {
 
                 var alias = this.alias || {};
-                if ( isString( alias.exports ) ) {
-                    this.exports = global[ alias.exports ];
-                    var exports = alias.exports.split( '.' );
+                if ( isString(alias.exports) ) {
+                    this.exports = global[alias.exports];
+                    var exports = alias.exports.split('.');
                     var sup = global;
                     for ( var i = 0, len = exports.length; i < len; i++ ) {
-                        this.exports = sup[ exports[i] ];
+                        this.exports = sup[exports[i]];
                         sup = this.exports;
                     }
                 }
@@ -506,7 +510,7 @@
 
                 this.status = STATUS.EXECUTING;
 
-                factory( require, this.exports, this );
+                factory(require, this.exports, this);
             }
 
             this.status = STATUS.DONE;
@@ -536,25 +540,25 @@
             loadingModules = {};
         },
 
-        get: function ( uri ) {
-            return cache[ uri ];
+        get: function (uri) {
+            return cache[uri];
         },
 
-        create: function ( meta ) {
+        create: function (meta) {
 
-            var mod = this.get( meta.uri );
+            var mod = this.get(meta.uri);
             var alias;
 
             if ( !mod ) {
 
                 if ( meta.id ) {
-                    alias = getAlias( meta.id );
+                    alias = getAlias(meta.id);
                     if ( alias ) {
                         meta.deps = alias.requires || [];
                     }
                 }
 
-                mod = new Module( meta.uri, meta.deps, meta.factory );
+                mod = new Module(meta.uri, meta.deps, meta.factory);
 
                 mod.alias = alias;
                 mod.isAlias = !!alias;
@@ -565,7 +569,7 @@
                     mod.status = STATUS.META;
                 }
                 
-                cache[ mod.uri ] = mod;
+                cache[mod.uri] = mod;
             } else {
                 mod.factory = meta.factory;
                 mod.deps = meta.deps;
@@ -574,9 +578,9 @@
             return mod;
         },
 
-        require: function ( id, relativeUri ) {
+        require: function (id, relativeUri) {
 
-            var mod = this.get( id2Uri( id, relativeUri ) );
+            var mod = this.get(id2Uri(id, relativeUri));
 
             if ( mod.status < STATUS.EXECUTING ) {
                 mod.exec();
@@ -598,7 +602,7 @@
     cola.define = function () {
 
         var id, factory, deps;
-        var args = [].slice.call( arguments );
+        var args = [].slice.call(arguments);
 
         switch (args.length) {
 
@@ -610,20 +614,20 @@
 
             case 2:
                 factory = args[1];
-                if ( isArray( args[0] ) ) {
+                if ( isArray(args[0]) ) {
                     deps = args[0];
                 } else {
                     id = args[0];
-                    deps = parseDeps( factory.toString() );
+                    deps = parseDeps(factory.toString());
                 }
                 break;
             case 1:
                 factory = args[0];
-                deps = parseDeps( factory.toString() );
+                deps = parseDeps(factory.toString());
         }
 
         var meta = {
-            uri: id2Uri( id ),
+            uri: id2Uri(id),
             deps: deps,
             factory: factory
         };
@@ -635,7 +639,7 @@
             }
         }
 
-        meta.uri ? Module.create( meta ) : anonyMeta = meta;
+        meta.uri ? Module.create(meta) : anonyMeta = meta;
     };
     
     /**
@@ -668,32 +672,32 @@
                 break;
             case 1:
                 factory = args[0];
-                deps = parseDeps( factory.toString() );
+                deps = parseDeps(factory.toString());
         }
 
         var meta = {
             uri: genAnonyId(),
-            deps: isArray( deps ) ? deps : [deps],
+            deps: isArray(deps) ? deps : [deps],
             factory: factory || noop
         };
 
-        var mod = Module.create( meta );
-        emiter.one( mod.uri, function () {
+        var mod = Module.create(meta);
+        emiter.one(mod.uri, function () {
             mod.exec();
-        } );
+        });
 
         mod.load();
 
         return cola;
     };
 
-    cola.config = function ( _config ) {
-        extend( config, _config );
+    cola.config = function (_config) {
+        extend(config, _config);
         return cola;
     };
 
-    cola.alias = function ( _alias ) {
-        extend( alias, _alias );
+    cola.alias = function (_alias) {
+        extend(alias, _alias);
     };
     
     cola.cache = cache;
@@ -703,4 +707,4 @@
         global.define = cola.define;
     }
 
-} )( this );
+} )(this);
