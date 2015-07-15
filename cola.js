@@ -213,11 +213,64 @@
         return '_cola_anony_mod_' + gid++;
     }
 
-    function removeComments (code) {
+    //function removeComments (code) {
 
-        return code.replace(/\/\*.*\*\//g, '')
-                    .replace(/\/\/.*(?=[\n\t])/g, '')
-                    .replace(/^\s*\/\*[\s\S]*?\*\/\s*$/mg, '');
+    //    return code.replace(/\/\*.*\*\//g, '')
+    //                .replace(/\/\/.*(?=[\n\t])/g, '')
+    //                .replace(/^\s*\/\*[\s\S]*?\*\/\s*$/mg, '');
+    //}
+
+    function removeComments ( code ) {
+        //return code.replace( /\/\*.*\*\//g, '' )
+                    //.replace(/\/\/.*(?=[\n\t])/g, '')
+        code = code.replace(/^\s*\/\/.*(?=[\n\t])/mg, '') //单行注释
+                    .replace( /^\s*\/\*[\s\S]*?\*\/\s*$/mg, '' ); //多行注释
+
+        var char,
+            s = '',
+            index = 0,
+            startQuote,
+            isDoubleSlashComment = false,
+            isAsteriskComment = false;
+        
+        while ( char = code[index++] ) {
+            
+            //匹配单引号或者双引号字符串
+            if ( !isDoubleSlashComment && !isAsteriskComment && (char == "'" || char == '"') ) {
+                if ( !startQuote ) {
+                    startQuote = char;
+                } else if ( startQuote == char ) {
+                    startQuote = '';
+                }
+            }
+
+            if ( startQuote ) {
+                s += char;
+                continue;
+            }
+
+            if ( isDoubleSlashComment || isAsteriskComment ) {
+                if ( isDoubleSlashComment ) {
+                    if ( char == '\n' ) {
+                        isDoubleSlashComment = false;
+                    }
+                } else {
+                    if ( char == '/' && code[index-2] == '*' ) {
+                        isAsteriskComment = false;
+                    }
+                }
+            } else {
+                if ( char == '/' && code[index] == '/' ) { //行尾双斜线注释开始
+                    isDoubleSlashComment = true;
+                } else if ( char == '/' && code[index] == '*' ) { //单行星号注释
+                    isAsteriskComment = true;
+                } else {
+                    s += char;
+                }
+            }
+        }
+
+        return s;
     }
 
     function unique (deps) {

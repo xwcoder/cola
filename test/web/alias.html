@@ -14,7 +14,8 @@ cola.alias( {
     passport: { path: 'http://js.tv.itc.cn/base/core/newpassport_dccea4.js', exports: 'PassportSC' },
     jquery: { path: 'http://js.tv.itc.cn/base/core/j_1.7.2.js?vid=123', exports: 'jQuery' },
     jquery2: { path: 'http://js.tv.itc.cn/base/core/j_1.7.2.js?vid=124', exports: 'jQuery' },
-    winbox: { path : 'http://js.tv.itc.cn/base/plugin/showwin_47c856.js', requires : [ 'jquery', 'global' ], exports: 'sohuHD.showWin' }
+    winbox: { path : 'http://js.tv.itc.cn/base/plugin/showwin_47c856.js', requires : [ 'jquery', 'global' ], exports: 'sohuHD.showWin' },
+    winbox2: { path : 'http://js.tv.itc.cn/base/plugin/showwin_47c856.js?v=2', requires : [ 'jquery', 'global' ], exports: 'sohuHD.showWin' }
 } );
 </script>
 <script>
@@ -33,14 +34,27 @@ cola.alias( {
 //    global: { path: 'http://js.tv.itc.cn/base/core/g_755eb8.js', requires: [ 'jquery' ], exports: 'sohuHD' },
 //} );
 
-cola.alias( {
-    jquery: { path: 'base/core/j_1.7.2.js?vid=111', exports: 'jQuery' },
-    jquery2: { path: 'base/core/j_1.7.2.js?vid=222', exports: 'jQuery' },
+//cola.alias( {
+//    jquery: { path: 'base/core/j_1.7.2.js?vid=111', exports: 'jQuery' },
+//    jquery2: { path: 'base/core/j_1.7.2.js?vid=222', exports: 'jQuery' },
+//} );
+
+cola.use( function ( require ) {
+    //var $ = require( 'jquery' );
+    //var $2 = require( 'jquery2' );
+    var win1 = require('winbox');
+    var win2 = require('winbox2');
+    var logger = require( './testlib/logger' )( 'log' );
+    var dom = require( './testlib/alias/dom' );
+
+    logger.log( dom.name );
 } );
 
 cola.use( function ( require ) {
-    var $ = require( 'jquery' );
-    var $2 = require( 'jquery2' );
+    //var $ = require( 'jquery' );
+    //var $2 = require( 'jquery2' );
+    var win1 = require('winbox');
+    var win2 = require('winbox2');
     var logger = require( './testlib/logger' )( 'log' );
     var dom = require( './testlib/alias/dom' );
 
