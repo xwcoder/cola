@@ -4,7 +4,7 @@
 ## 简介
 一个简单的cmd模块加载器。遵循"as lazy as possible"的原则。支持加载时的循环依赖, 执行阶段返回空对象。解开循环依赖的[思路](https://github.com/seajs/seajs/issues/1436)。
 
-编译、打包工具[colac](https://github.com/xwcoder/colac)
+编译、打包工具[colac](https://github.com/xwcoder/colac) [gulp-colac](https://github.com/xwcoder/gulp-colac)
 
 ## api
 
