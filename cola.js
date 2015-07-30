@@ -341,7 +341,8 @@
         // then use id and relativeUri to generate module's uri
         if ( ( id.indexOf('../') == 0 || id.indexOf('./') == 0 )
                 && relativeUri
-                && REG_HAS_PROTOCAL.test(relativeUri) ) {
+                //&& REG_HAS_PROTOCAL.test(relativeUri)
+                ) {
             path = relativeUri.replace(REG_DIR_NAME, '');
         }
 
