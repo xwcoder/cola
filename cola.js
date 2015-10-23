@@ -118,7 +118,7 @@
 
             function onLoad () {
 
-                script.onload = script.onreadystatechange = null;            
+                script.onerror = script.onload = script.onreadystatechange = null;            
 
                 if ( head && script.parentNode ) {
                     head.removeChild(script);
@@ -136,8 +136,12 @@
                     if ( /loaded|complete/.test(script.readyState) ) {
                         onLoad();
                     }
-                }
+                };
             }
+
+            script.onerror = function (e) {
+                onLoad();
+            };
 
             this.currentAddingScript = script;
 
