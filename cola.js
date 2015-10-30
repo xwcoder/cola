@@ -16,7 +16,7 @@
             }
         }
     };
-    
+
     var isType = function (type) {
         return function (obj) {
             return {}.toString.call(obj) == '[object ' + type + ']';
@@ -51,7 +51,7 @@
                     break;
                 }
             }
-            
+
             if ( !has ) {
                 handlers.push({ h: handler, one: one });
             }
@@ -118,7 +118,7 @@
 
             function onLoad () {
 
-                script.onerror = script.onload = script.onreadystatechange = null;            
+                script.onerror = script.onload = script.onreadystatechange = null;
 
                 if ( head && script.parentNode ) {
                     head.removeChild(script);
@@ -140,6 +140,9 @@
             }
 
             script.onerror = function (e) {
+                if (window.console && console.log) {
+                    console.log(e);
+                }
                 onLoad();
             };
 
@@ -156,7 +159,7 @@
             if ( this.currentAddingScript ) {
                 return this.currentAddingScript;
             }
-            
+
             var interactiveScript = this.interactiveScript;
             if ( interactiveScript && interactiveScript.readyState == 'interactive' ) {
                 return interactiveScript;
@@ -212,7 +215,7 @@
     };
 
     var gid = 0;
-    
+
     function genAnonyId () {
         return '_cola_anony_mod_' + gid++;
     }
@@ -236,9 +239,9 @@
             startQuote,
             isDoubleSlashComment = false,
             isAsteriskComment = false;
-        
+
         while ( char = code[index++] ) {
-            
+
             //匹配单引号或者双引号字符串
             if ( !isDoubleSlashComment && !isAsteriskComment && (char == "'" || char == '"') ) {
                 if ( !startQuote ) {
@@ -299,13 +302,13 @@
         if ( code.indexOf('require') == '-1' ) {
             return [];
         }
-        
+
         var deps = [], match;
 
         while ( match = requireReg.exec(code) ) {
             deps.push(match[1]);
         }
-        
+
         return unique(deps);
     }
 
@@ -333,7 +336,7 @@
         if ( getAlias(id) ) {
             id = getAlias(id).path;
         }
-        
+
         if ( REG_HAS_PROTOCAL.test(id) ) {
             return id;
             //return formatUri(id);
@@ -341,7 +344,7 @@
 
         var path = config.path;
 
-        // if id start with './' or '../' and relativeUri has protocal, 
+        // if id start with './' or '../' and relativeUri has protocal,
         // then use id and relativeUri to generate module's uri
         if ( ( id.indexOf('../') == 0 || id.indexOf('./') == 0 )
                 && relativeUri
@@ -394,7 +397,7 @@
         },
 
         fetch: function () {
-            
+
             if ( this.isAlias ) {
                 this.aliasFetch();
                 return;
@@ -485,9 +488,9 @@
 
             // 加载依赖
             this.status = STATUS.LOADING;
-            
+
             loadingModules[self.uri] = self;
-            
+
             var deps = this.deps;
             var mod, uri, id;
 
@@ -514,7 +517,7 @@
                 }
 
                 if ( mod.status < STATUS.LOADED ) {
-                    
+
                     depsReady += 1;
                     emiter.one(uri, depReadyhandler);
 
@@ -626,7 +629,7 @@
                 } else {
                     mod.status = STATUS.META;
                 }
-                
+
                 cache[mod.uri] = mod;
             } else {
                 mod.factory = meta.factory;
@@ -639,6 +642,10 @@
         require: function (id, relativeUri) {
 
             var mod = this.get(id2Uri(id, relativeUri));
+
+            if (!mod) {
+                throw 'there is no module named: ' + id + '(' + id2Uri(id, relativeUri) + ')';
+            }
 
             if ( mod.status < STATUS.EXECUTING ) {
                 mod.exec();
@@ -699,13 +706,13 @@
 
         meta.uri ? Module.create(meta) : anonyMeta = meta;
     };
-    
+
     /**
      * just匿名模块
      * cola.use( factory );
      * cola.use( './lib/dom', factory );
      * cola.use( ['./lib/dom', './lib/ajax'], factory );
-     * 
+     *
      * config.use时, 路径都是相对config.path, 不管是相对路径或是绝对路径
      * 原因: 无法兼容获取当前运行脚本的路径(src)
      *  1. document.currentScript
@@ -722,7 +729,7 @@
 
         var args = [].slice.call( arguments );
         var deps, factory;
-        
+
         switch (args.length) {
             case 2:
                 deps = args[0];
@@ -757,7 +764,7 @@
     cola.alias = function (_alias) {
         extend(alias, _alias);
     };
-    
+
     cola.cache = cache;
     global.cola = cola;
 
