@@ -187,7 +187,7 @@
             var nodes = document.getElementsByTagName( 'script' );
             var node = nodes[nodes.length - 1];
             ///^(.+:\/\/.+?)(?:\/|$)/.exec( node.src );
-            /^(.+:\/\/.+)(?:\/)/.exec( node.src );
+            /^(.+?:\/\/.+?)(?:[\/\?#])/.exec( node.src );
             return RegExp.$1;
         })(),
         main: 'index.js'
