@@ -2,6 +2,10 @@
 
     'use strict';
 
+    if (global.cola) {
+        return;
+    }
+
     var cola = {
         version: '1.0.0'
     };
