@@ -323,7 +323,9 @@
     var REG_DOT_SLASH = /\/\.\//g;
     var REG_MULTI_SLASH = /([^:])\/+\//g;
     var REG_DOUBLE_SLASH = /\/[^\/]+\/\.\.\//;
-    var REG_HAS_PROTOCAL = /^[^:\/]+:\/\//;
+    //var REG_HAS_PROTOCAL = /^[^:\/]+:\/\//;
+    var REG_HAS_EXPLICIT_PROTOCAL = /^[^:\/]+:\/\//;
+    var REG_HAS_PROTOCAL = /^(?:[a-zA-Z]+?:)?\/\/.+?/
     var REG_DIR_NAME = /\/[^\/]*\.[^\/]*$/;
 
     function getAlias (id) {
@@ -342,7 +344,8 @@
         }
 
         if ( REG_HAS_PROTOCAL.test(id) ) {
-            return id;
+            return REG_HAS_EXPLICIT_PROTOCAL.test(id) ? id : document.location.protocal + id
+            //return id;
             //return formatUri(id);
         }
 
@@ -352,7 +355,7 @@
         // then use id and relativeUri to generate module's uri
         if ( ( id.indexOf('../') == 0 || id.indexOf('./') == 0 )
                 && relativeUri
-                //&& REG_HAS_PROTOCAL.test(relativeUri)
+                && REG_HAS_PROTOCAL.test(relativeUri)
                 ) {
             path = relativeUri.replace(REG_DIR_NAME, '');
         }
